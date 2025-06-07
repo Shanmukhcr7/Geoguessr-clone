@@ -291,17 +291,18 @@ select:focus {
 
 /* Custom Modal Styling */
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.7);
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.7); /* Black w/ opacity */
     justify-content: center;
     align-items: center;
+    padding: 20px; /* Add padding for modal itself */
 }
 
 .modal-content {
@@ -316,6 +317,23 @@ select:focus {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     position: relative;
     color: #e0e6eb;
+}
+
+/* Specific style for Game Over Modal */
+.modal.game-over .modal-content {
+    background: linear-gradient(145deg, #1f354a, #0d1a26); /* Darker, thematic gradient */
+    border: 2px solid #00e676; /* Thicker, brighter border */
+    box-shadow: 0 0 30px rgba(0, 230, 118, 0.6), 0 0 10px rgba(0, 230, 118, 0.8); /* Stronger glow */
+    max-width: 600px; /* Wider for desktop game over board */
+    padding: 40px; /* More padding */
+    font-size: 1.3em;
+}
+
+.modal.game-over #modal-message {
+    font-size: 1.8em; /* Larger message font */
+    color: #00e676; /* Message in accent color */
+    text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+    margin-bottom: 30px; /* More space */
 }
 
 .close-button {
@@ -352,7 +370,7 @@ select:focus {
     cursor: pointer;
     font-weight: 600;
     transition: background-color 0.3s ease, transform 0.1s ease;
-    background-color: #00e676;
+    background-color: #00e676; /* Confirm/OK button */
     color: white;
 }
 .modal-button:hover {
@@ -360,7 +378,7 @@ select:focus {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 #modal-cancel-button {
-    background-color: #ff5252;
+    background-color: #ff5252; /* Cancel button */
 }
 #modal-cancel-button:hover {
     background-color: #e64a4a;
@@ -408,6 +426,14 @@ select:focus {
 
 /* Responsive Design */
 @media (max-width: 900px) {
+    /* REMOVE DEBUG BORDERS AFTER TESTING */
+    /* body { border: 2px solid cyan !important; } */
+    /* .game-container { border: 2px solid magenta !important; } */
+    /* #main-grid { border: 2px solid yellow !important; } */
+    /* #street-view { border: 2px solid orange !important; } */
+    /* #map { border: 2px solid blue !important; } */
+    /* END DEBUG BORDERS */
+
     .game-container {
         width: 98vw;
         padding: 10px;
@@ -443,16 +469,16 @@ select:focus {
     }
 
     #main-grid {
-        grid-template-columns: 1fr; /* THIS IS THE KEY: Forces items into a single column */
+        grid-template-columns: 1fr; /* Ensures stacking */
         gap: 10px; /* Reduced gap between stacked image and map */
+        width: 100%;
+        margin: 0 auto 15px auto;
     }
     #street-view {
         height: 250px; /* Specific height for mobile Street View */
-        border-radius: 10px;
     }
     #map {
         height: 200px; /* Specific height for mobile Map, appears directly below Street View */
-        border-radius: 10px;
     }
     #controls {
         flex-direction: column;
@@ -482,6 +508,16 @@ select:focus {
     }
     .score-popup {
         font-size: 2em;
+    }
+
+    .modal.game-over .modal-content {
+        max-width: 90vw; /* Adjust for smaller mobile screens */
+        padding: 30px;
+        font-size: 1.1em;
+    }
+    .modal.game-over #modal-message {
+        font-size: 1.5em; /* Smaller game over message font */
+        margin-bottom: 20px;
     }
 }
 
@@ -513,3 +549,4 @@ select:focus {
         width: 100%;
     }
 }
+
