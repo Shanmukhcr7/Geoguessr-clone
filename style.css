@@ -1,3 +1,8 @@
+/* Universal Box-Sizing for easier layout management */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 /* General Body and Layout */
 body {
     font-family: 'Roboto', sans-serif;
@@ -33,18 +38,18 @@ body {
     width: 95vw; /* Fluid width */
     max-width: 1300px;
     padding: 20px;
-    box-sizing: border-box;
+    /* box-sizing: border-box; - Already handled by universal selector */
 }
 
 /* Header for Title and Game Stats */
 header {
     width: 100%;
     display: flex;
-    justify-content: space-between; /* Space out title and stats */
-    align-items: flex-start; /* Align title to top, stats to top-right */
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 20px;
     padding: 0 10px;
-    box-sizing: border-box;
+    /* box-sizing: border-box; - Already handled by universal selector */
 }
 
 h1 {
@@ -56,23 +61,23 @@ h1 {
     letter-spacing: 2px;
     font-size: 2.5em;
     text-align: left;
-    flex-shrink: 1; /* Allow title to shrink */
-    min-width: 0; /* Prevent overflow */
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 #top-right-stats {
     display: flex;
     align-items: flex-start;
-    gap: 20px; /* Space between game stats and timer */
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    justify-content: flex-end; /* Align right on larger screens */
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 #game-stats,
 #timer-section {
     display: flex;
     flex-direction: column;
-    align-items: flex-end; /* Align score/round/timer text to the right */
+    align-items: flex-end;
     padding: 10px 15px;
     background: #1a2c3a;
     border-radius: 10px;
@@ -80,7 +85,7 @@ h1 {
     border: 1px solid rgba(0, 230, 118, 0.3);
     font-size: 1.1em;
     font-weight: 600;
-    flex-shrink: 0; /* Prevent shrinking too much */
+    flex-shrink: 0;
 }
 
 #current-score,
@@ -93,13 +98,13 @@ h1 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 25px;
-    width: 100%; /* Fluid width */
+    width: 100%; /* Ensure it always takes full available width */
     margin-bottom: 25px;
 }
 
 #street-view,
 #map {
-    width: 100%;
+    width: 100%; /* Ensure they always take full column width */
     height: 500px; /* Default large screen height */
     border-radius: 15px;
     overflow: hidden;
@@ -405,47 +410,53 @@ select:focus {
 
 /* Responsive Design */
 @media (max-width: 900px) {
+    .game-container {
+        width: 98vw; /* Use slightly more width to maximize space */
+        padding: 10px; /* Reduced padding for mobile */
+    }
+
     header {
         flex-direction: column; /* Stack title and stats */
         align-items: center;
-        gap: 15px; /* Space between title and top-right-stats */
-        margin-bottom: 15px; /* Reduce margin */
+        gap: 15px;
+        margin-bottom: 15px;
+        padding: 0 5px; /* Reduced padding */
     }
     h1 {
         font-size: 1.8em;
         text-align: center;
-        margin-bottom: 10px; /* Add margin after title when stacked */
+        margin-bottom: 10px;
     }
     #top-right-stats {
         flex-direction: column; /* Stack game stats and timer section */
         align-items: center;
-        width: 100%; /* Take full width */
-        gap: 10px; /* Space between stacked stats */
+        width: 100%;
+        gap: 10px;
     }
     #game-stats,
     #timer-section {
-        width: 90%; /* Adjust width for mobile panels */
-        align-items: center; /* Center text within panels */
-        padding: 8px 12px; /* Slightly less padding */
-        font-size: 1em; /* Smaller font for stats */
+        width: 95%; /* Adjust width for mobile panels to be almost full width */
+        align-items: center;
+        padding: 8px 12px;
+        font-size: 1em;
     }
     #timer-bar-container {
         width: 80%; /* Make timer bar responsive to panel width */
     }
 
     #main-grid {
-        grid-template-columns: 1fr; /* Single column layout */
-        gap: 15px; /* Reduce gap between rows */
+        grid-template-columns: 1fr; /* Crucial: Single column layout */
+        gap: 15px;
     }
     #street-view,
     #map {
-        height: 250px; /* **Reduced height for better visibility of both** */
-        border-radius: 10px; /* Slightly less rounded */
+        height: 280px; /* **Increased slightly for better visibility while ensuring stacking** */
+        border-radius: 10px;
     }
     #controls {
         flex-direction: column;
-        gap: 10px; /* Reduce gap */
-        margin-bottom: 15px; /* Reduce margin */
+        gap: 10px;
+        margin-bottom: 15px;
     }
     button,
     select {
@@ -453,13 +464,13 @@ select:focus {
         min-width: unset;
         font-size: 1em;
         padding: 12px 20px;
-        border-radius: 8px; /* Slightly less rounded */
+        border-radius: 8px;
     }
     #info-panel {
         font-size: 1em;
         padding: 15px;
         border-radius: 10px;
-        margin-bottom: 10px; /* Reduce margin */
+        margin-bottom: 10px;
     }
     #result {
         font-size: 1.1em;
@@ -468,11 +479,8 @@ select:focus {
     #hint {
         font-size: 0.9em;
     }
-    .game-container {
-        padding: 10px; /* Less padding around container */
-    }
     .score-popup {
-        font-size: 2em; /* Smaller on mobile */
+        font-size: 2em;
     }
 }
 
@@ -483,7 +491,7 @@ select:focus {
     }
     #street-view,
     #map {
-        height: 220px; /* Even shorter on very small screens */
+        height: 220px; /* Even shorter on very small screens to ensure fit */
     }
     .modal-content {
         padding: 20px;
@@ -492,8 +500,13 @@ select:focus {
     #modal-message {
         font-size: 1em;
     }
+    #modal-buttons {
+        flex-direction: column; /* Stack buttons in modal on small screens */
+        gap: 8px;
+    }
     .modal-button {
         padding: 8px 15px;
         font-size: 0.9em;
+        width: 100%; /* Full width for modal buttons too */
     }
 }
