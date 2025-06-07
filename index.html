@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GeoGuessr Global Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <canvas id="networkCanvas"></canvas> <!-- Canvas for thematic network animation -->
+
+    <div class="game-container">
+        <header>
+            <h1>GeoGuessr Global Explorer</h1>
+            <div id="top-right-stats">
+                <div id="game-stats">
+                    <p id="current-score">Score: 0</p>
+                    <p id="current-round">Round: 1 / 5</p>
+                </div>
+                <div id="timer-section">
+                    <p id="timer"></p>
+                    <div id="timer-bar-container"><div id="timer-bar"></div></div>
+                </div>
+            </div>
+        </header>
+
+        <div id="main-grid">
+            <div id="street-view">
+                <p>Loading Street View...</p>
+                <div class="spinner"></div>
+            </div>
+            <div id="map"></div>
+            <div id="controls">
+                <select id="difficulty">
+                    <option value="easy">Easy (Near City Centers)</option>
+                    <option value="medium" selected>Medium (City Areas)</option>
+                    <option value="hard">Hard (Worldwide Random)</option>
+                </select>
+                <button id="guess-button">Make Guess</button>
+                <button id="next-round-button" disabled>Next Round</button>
+            </div>
+            <div id="info-panel">
+                <!-- Timer was here, now moved to header -->
+                <p id="result"></p>
+                <p id="hint"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="score-popup" class="score-popup"></div> <!-- New pop-up element -->
+
+    <!-- Custom Alert Modal -->
+    <div id="custom-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modal-message"></p>
+            <div id="modal-buttons">
+                <button id="modal-confirm-button" class="modal-button">OK</button>
+                <button id="modal-cancel-button" class="modal-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="script.js"></script>
+    <script src="network-canvas.js"></script>
+</body>
+</html>
