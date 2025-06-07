@@ -69,7 +69,7 @@ let currentRound = 1;
 let score = 0;
 let timerInterval = null;
 let timeLeft = timePerRound;
-let timerBeepInterval = null; // New: for timer warning sound
+let timerBeepInterval = null;
 
 const streetViewDiv = document.getElementById("street-view");
 const guessButton = document.getElementById("guess-button");
@@ -162,19 +162,47 @@ document.documentElement.addEventListener('mousedown', initializeAudio, { once: 
 document.documentElement.addEventListener('touchstart', initializeAudio, { once: true });
 
 
-// --- Custom Modal Functions (unchanged) ---
+// --- Custom Modal Functions ---
 
 /**
- * Displays a custom confirmation modal.
+ * Shows a custom modal with one 'OK' button.
  * @param {string} message - The message to display.
- * @param {function} onConfirm - Callback function if user confirms.
- * @param {function} onCancel - Callback function if user cancels (optional).
+ * @param {function} onOk - Callback function when 'OK' is clicked.
+ * @param {string} okButtonText - Custom text for the OK button (defaults to 'OK').
  */
-function showConfirmModal(message, onConfirm, onCancel = () => {}) {
-    modalMessage.textContent = message;
-    customModal.style.display = 'flex'; // Use flex to center
+function showAlertDialog(message, onOk = () => {}, okButtonText = 'OK') {
+    modalMessage.innerHTML = message; // Use innerHTML for potential formatting like bold
+    modalConfirmButton.textContent = okButtonText;
+    modalCancelButton.style.display = 'none'; // Hide cancel button
     modalConfirmButton.style.display = 'inline-block';
-    modalCancelButton.style.display = 'inline-block';
+
+    customModal.style.display = 'flex'; // Show modal
+
+    const handleOk = () => {
+        onOk();
+        customModal.style.display = 'none';
+        modalConfirmButton.removeEventListener('click', handleOk);
+        closeButton.removeEventListener('click', handleOk);
+    };
+
+    modalConfirmButton.addEventListener('click', handleOk);
+    closeButton.addEventListener('click', handleOk);
+}
+
+/**
+ * Shows a custom modal with 'Confirm' and 'Cancel' buttons.
+ * @param {string} message - The message to display.
+ * @param {function} onConfirm - Callback function if 'Confirm' is clicked.
+ * @param {function} onCancel - Callback function if 'Cancel' is clicked (optional).
+ */
+function showConfirmDialog(message, onConfirm, onCancel = () => {}) {
+    modalMessage.innerHTML = message;
+    modalConfirmButton.textContent = 'Confirm';
+    modalCancelButton.textContent = 'Cancel';
+    modalCancelButton.style.display = 'inline-block'; // Show cancel button
+    modalConfirmButton.style.display = 'inline-block';
+
+    customModal.style.display = 'flex'; // Show modal
 
     const handleConfirm = () => {
         onConfirm();
@@ -194,29 +222,7 @@ function showConfirmModal(message, onConfirm, onCancel = () => {}) {
 
     modalConfirmButton.addEventListener('click', handleConfirm);
     modalCancelButton.addEventListener('click', handleCancel);
-    closeButton.addEventListener('click', handleCancel); // Allow closing with X button
-}
-
-/**
- * Displays a custom alert modal (no cancel option).
- * @param {string} message - The message to display.
- * @param {function} onOk - Callback function when user clicks OK.
- */
-function showAlertModal(message, onOk = () => {}) {
-    modalMessage.textContent = message;
-    customModal.style.display = 'flex';
-    modalCancelButton.style.display = 'none'; // Hide cancel button
-    modalConfirmButton.style.display = 'inline-block';
-
-    const handleOk = () => {
-        onOk();
-        customModal.style.display = 'none';
-        modalConfirmButton.removeEventListener('click', handleOk);
-        closeButton.removeEventListener('click', handleOk);
-    };
-
-    modalConfirmButton.addEventListener('click', handleOk);
-    closeButton.addEventListener('click', handleOk); // Allow closing with X button
+    closeButton.addEventListener('click', handleCancel);
 }
 
 
@@ -233,18 +239,17 @@ function getRandomCoords(difficulty) {
     const city = cityList[Math.floor(Math.random() * cityList.length)];
     let latOffset, lngOffset;
 
-    // Adjust offsets based on difficulty to get a point near the city
     switch (difficulty) {
         case "easy":
-            latOffset = (Math.random() - 0.5) * 0.005; // Very close to city center
+            latOffset = (Math.random() - 0.5) * 0.005;
             lngOffset = (Math.random() - 0.5) * 0.005;
             break;
         case "medium":
-            latOffset = (Math.random() - 0.5) * 0.02; // Within city limits
+            latOffset = (Math.random() - 0.5) * 0.02;
             lngOffset = (Math.random() - 0.5) * 0.02;
             break;
         case "hard":
-            latOffset = (Math.random() - 0.5) * 0.2; // Wider area, potentially outskirts or rural
+            latOffset = (Math.random() - 0.5) * 0.2;
             lngOffset = (Math.random() - 0.5) * 0.2;
             break;
         default:
@@ -266,7 +271,6 @@ function getRandomCoords(difficulty) {
  * @returns {Promise<boolean>} - True if image loaded successfully, false otherwise.
  */
 function loadStreetViewImage(retries = 10) {
-    // Show loading spinner and text
     streetViewDiv.innerHTML = `<p>Loading Street View...</p><div class="spinner"></div>`;
 
     const difficulty = difficultySelect.value;
@@ -277,24 +281,24 @@ function loadStreetViewImage(retries = 10) {
     return fetch(metadataUrl)
         .then((response) => response.json())
         .then((data) => {
-            if (data.status === "OK" && data.pano_id) { // Check for pano_id for actual Street View
+            if (data.status === "OK" && data.pano_id) {
                 actualLocation = coords;
                 actualCityName = coordsObj.cityName;
                 const imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=900x600&location=${coords.lat},${coords.lng}&fov=90&heading=${Math.random() * 360}&pitch=0&key=${GOOGLE_API_KEY}`;
                 streetViewDiv.innerHTML = `<img src="${imageUrl}" alt="Street View Image" onerror="this.onerror=null; this.src='https://placehold.co/900x600/334a5c/ffffff?text=Image+Load+Error'; this.alt='Error loading image';" />`;
                 return true;
             } else if (retries > 0) {
-                return loadStreetViewImage(retries - 1); // Retry with new coordinates
+                return loadStreetViewImage(retries - 1);
             } else {
                 streetViewDiv.innerHTML = `<p>No Street View available after multiple attempts. Please ensure API key is valid or try again.</p>`;
-                showAlertModal("No Street View available for multiple generated locations. Check API key or reload.");
+                showAlertDialog("No Street View available for multiple generated locations. Check API key or reload.");
                 return false;
             }
         })
         .catch((error) => {
             console.error("Error fetching Street View metadata:", error);
             streetViewDiv.innerHTML = `<p>Error loading Street View. Check your internet connection or API key.</p>`;
-            showAlertModal("Error loading Street View data. Please check your internet connection or API key.");
+            showAlertDialog("Error loading Street View data. Please check your internet connection or API key.");
             return false;
         });
 }
@@ -310,14 +314,14 @@ function initMap() {
     }).addTo(map);
 
     map.on("click", function (e) {
-        if (guessButton.disabled === false) { // Only allow placing marker if guess isn't made yet
+        if (guessButton.disabled === false) {
             if (guessMarker) {
                 guessMarker.setLatLng(e.latlng);
             } else {
                 guessMarker = L.marker(e.latlng, { title: "Your Guess" }).addTo(map);
             }
             if (audioContextStarted && guessSynth) {
-                guessSynth.triggerAttackRelease("C4", "8n"); // Play a click sound
+                guessSynth.triggerAttackRelease("C4", "8n");
             }
         }
     });
@@ -353,9 +357,9 @@ function startTimer() {
     timeLeft = timePerRound;
     timerP.textContent = `Time left: ${timeLeft}s`;
     timerBar.style.width = "100%";
-    timerBar.style.backgroundColor = "#00e676"; // Green at start
+    timerBar.style.backgroundColor = "#00e676";
 
-    clearInterval(timerInterval); // Clear any existing timer
+    clearInterval(timerInterval);
     clearInterval(timerBeepInterval); // Clear any existing timer beep interval
 
     timerInterval = setInterval(() => {
@@ -364,33 +368,34 @@ function startTimer() {
         const percentage = (timeLeft / timePerRound) * 100;
         timerBar.style.width = `${percentage}%`;
 
-        if (timeLeft <= 5 && timeLeft > 0 && audioContextStarted && timerBeep) { // Beep warning in last 5 seconds
+        if (timeLeft <= 5 && timeLeft > 0 && audioContextStarted && timerBeep) {
             timerBeep.triggerAttackRelease("C2", "16n");
         }
 
-        // Change timer bar color based on time left
         if (percentage > 60) {
-            timerBar.style.backgroundColor = "#00e676"; // Green
+            timerBar.style.backgroundColor = "#00e676";
         } else if (percentage > 30) {
-            timerBar.style.backgroundColor = "#ffa000"; // Amber
+            timerBar.style.backgroundColor = "#ffa000";
         } else {
-            timerBar.style.backgroundColor = "#ff5252"; // Red
+            timerBar.style.backgroundColor = "#ff5252";
         }
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            clearInterval(timerBeepInterval); // Ensure beeps stop
+            clearInterval(timerBeepInterval);
+
             guessButton.disabled = true;
             timerP.textContent = "Time's up!";
             nextRoundButton.disabled = false;
+
             if (audioContextStarted && roundEndSynth) {
-                roundEndSynth.triggerAttackRelease("C3", "0.5"); // Round end sound
+                roundEndSynth.triggerAttackRelease("C3", "0.5");
             }
 
             if (!guessMarker) {
-                showAlertModal("Time's up! No guess was made for this round. You scored 0 points.", makeGuess);
+                showAlertDialog("Time's up! No guess was made for this round. You scored 0 points.", makeGuess);
             } else {
-                 makeGuess(); // Process the existing guess if any
+                 makeGuess();
             }
         }
     }, 1000);
@@ -402,27 +407,25 @@ function startTimer() {
  */
 function showScorePopup(points) {
     scorePopup.textContent = `+${points} points!`;
-    scorePopup.classList.add('active'); // Add class to trigger animation
+    scorePopup.classList.add('active');
 
-    // Remove the class after the animation duration to allow re-triggering
     scorePopup.addEventListener('animationend', () => {
         scorePopup.classList.remove('active');
-        scorePopup.textContent = ''; // Clear text after animation
-    }, { once: true }); // Ensure listener is removed after one use
+        scorePopup.textContent = '';
+    }, { once: true });
 }
 
 /**
  * Processes the user's guess, calculates score, and reveals the actual location.
  */
 function makeGuess() {
-    // Only proceed if a guess marker exists or time has run out
     if (!guessMarker && timeLeft > 0) {
-        showAlertModal("Please click on the map to make your guess!");
+        showAlertDialog("Please click on the map to make your guess!");
         return;
     }
 
     clearInterval(timerInterval);
-    clearInterval(timerBeepInterval); // Ensure beeps stop when guess is made
+    clearInterval(timerBeepInterval); // Stop beeps when guess is made
     guessButton.disabled = true;
     nextRoundButton.disabled = false;
 
@@ -450,14 +453,13 @@ function makeGuess() {
     score += roundScore;
     currentScoreP.textContent = `Score: ${score}`;
 
-    // Play sound based on score
     if (audioContextStarted) {
         if (roundScore > (0.8 * 5000) && correctSynth) {
-            correctSynth.triggerAttackRelease(["C5", "E5", "G5"], "0.3"); // Correct chord
-        } else if (roundScore > 0 && incorrectSynth) {
-            correctSynth.triggerAttackRelease("C4", "0.2"); // A less exciting correct sound
+            correctSynth.triggerAttackRelease(["C5", "E5", "G5"], "0.3");
+        } else if (roundScore > 0 && correctSynth) { // Still a 'correct' sound for any points
+            correctSynth.triggerAttackRelease("C4", "0.2");
         } else if (incorrectSynth) {
-            incorrectSynth.triggerAttackRelease(["C3", "G#2"], "0.4"); // Incorrect dissonant chord
+            incorrectSynth.triggerAttackRelease(["C3", "G#2"], "0.4");
         }
     }
 
@@ -511,94 +513,13 @@ function makeGuess() {
  */
 function nextRound() {
     currentRound++;
+    // Crucial: Stop any currently playing game over sound before checking
+    if (audioContextStarted && gameOverSynth) {
+        gameOverSynth.triggerRelease(); // Stop the sound immediately if it's playing
+    }
+
     if (currentRound > totalRounds) {
         if (audioContextStarted && gameOverSynth) {
-            gameOverSynth.triggerAttackRelease(["C3", "F2"], "2s"); // Game Over sound
+            gameOverSynth.triggerAttackRelease(["C3", "F2"], "1.5s"); // Play game over sound for a fixed duration
         }
-        showAlertModal(`Game Over! Your total score is ${score}. Thanks for playing!`, resetGame);
-        return;
-    }
-
-    currentRoundP.textContent = `Round: ${currentRound} / ${totalRounds}`;
-    resultP.textContent = "";
-    hintP.textContent = "";
-    guessButton.disabled = false;
-    nextRoundButton.disabled = true;
-
-    if (guessMarker) {
-        map.removeLayer(guessMarker);
-        guessMarker = null;
-    }
-    if (actualMarker) {
-        map.removeLayer(actualMarker);
-        actualMarker = null;
-    }
-    if (lineBetween) {
-        map.removeLayer(lineBetween);
-        lineBetween = null;
-    }
-
-    loadStreetViewImage().then((loaded) => {
-        if (loaded) {
-            map.setView([20, 0], 2);
-            startTimer();
-        }
-    });
-}
-
-/**
- * Resets the game to its initial state.
- */
-function resetGame() {
-    currentRound = 1;
-    score = 0;
-    currentScoreP.textContent = "Score: 0";
-    currentRoundP.textContent = `Round: 1 / ${totalRounds}`;
-    resultP.textContent = "";
-    hintP.textContent = "";
-    guessButton.disabled = false;
-    nextRoundButton.disabled = true;
-
-    clearInterval(timerInterval);
-    clearInterval(timerBeepInterval);
-
-    if (guessMarker) {
-        map.removeLayer(guessMarker);
-        guessMarker = null;
-    }
-    if (actualMarker) {
-        map.removeLayer(actualMarker);
-        actualMarker = null;
-    }
-    if (lineBetween) {
-        map.removeLayer(lineBetween);
-        lineBetween = null;
-    }
-
-    loadStreetViewImage().then((loaded) => {
-        if (loaded) {
-            map.setView([20, 0], 2);
-            startTimer();
-        }
-    });
-}
-
-// Event Listeners
-guessButton.addEventListener("click", makeGuess);
-nextRoundButton.addEventListener("click", nextRound);
-
-difficultySelect.addEventListener("change", () => {
-    showConfirmModal("Changing difficulty will reset the game. Continue?", () => {
-        resetGame();
-    }, () => {
-        // If user cancels, no action needed
-    });
-});
-
-// Initial game setup when window loads
-window.onload = () => {
-    initMap();
-    resetGame();
-    // No sound on initial load, only on user interaction
-};
-
+        // Use s
