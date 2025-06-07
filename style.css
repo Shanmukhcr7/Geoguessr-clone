@@ -38,7 +38,6 @@ body {
     width: 95vw; /* Fluid width */
     max-width: 1300px;
     padding: 20px;
-    /* box-sizing: border-box; - Already handled by universal selector */
 }
 
 /* Header for Title and Game Stats */
@@ -49,7 +48,6 @@ header {
     align-items: flex-start;
     margin-bottom: 20px;
     padding: 0 10px;
-    /* box-sizing: border-box; - Already handled by universal selector */
 }
 
 h1 {
@@ -68,7 +66,7 @@ h1 {
 #top-right-stats {
     display: flex;
     align-items: flex-start;
-    gap: 20px;
+    gap: 20px; /* Space between game stats and timer */
     flex-wrap: wrap;
     justify-content: flex-end;
 }
@@ -96,15 +94,15 @@ h1 {
 
 #main-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr; /* Default: two columns for larger screens */
     gap: 25px;
-    width: 100%; /* Ensure it always takes full available width */
+    width: 100%;
     margin-bottom: 25px;
 }
 
 #street-view,
 #map {
-    width: 100%; /* Ensure they always take full column width */
+    width: 100%;
     height: 500px; /* Default large screen height */
     border-radius: 15px;
     overflow: hidden;
@@ -411,16 +409,16 @@ select:focus {
 /* Responsive Design */
 @media (max-width: 900px) {
     .game-container {
-        width: 98vw; /* Use slightly more width to maximize space */
-        padding: 10px; /* Reduced padding for mobile */
+        width: 98vw;
+        padding: 10px;
     }
 
     header {
-        flex-direction: column; /* Stack title and stats */
+        flex-direction: column;
         align-items: center;
         gap: 15px;
         margin-bottom: 15px;
-        padding: 0 5px; /* Reduced padding */
+        padding: 0 5px;
     }
     h1 {
         font-size: 1.8em;
@@ -428,29 +426,32 @@ select:focus {
         margin-bottom: 10px;
     }
     #top-right-stats {
-        flex-direction: column; /* Stack game stats and timer section */
+        flex-direction: column;
         align-items: center;
         width: 100%;
         gap: 10px;
     }
     #game-stats,
     #timer-section {
-        width: 95%; /* Adjust width for mobile panels to be almost full width */
+        width: 95%;
         align-items: center;
         padding: 8px 12px;
         font-size: 1em;
     }
     #timer-bar-container {
-        width: 80%; /* Make timer bar responsive to panel width */
+        width: 80%;
     }
 
     #main-grid {
-        grid-template-columns: 1fr; /* Crucial: Single column layout */
-        gap: 15px;
+        grid-template-columns: 1fr; /* THIS IS THE KEY: Forces items into a single column */
+        gap: 10px; /* Reduced gap between stacked image and map */
     }
-    #street-view,
+    #street-view {
+        height: 250px; /* Specific height for mobile Street View */
+        border-radius: 10px;
+    }
     #map {
-        height: 280px; /* **Increased slightly for better visibility while ensuring stacking** */
+        height: 200px; /* Specific height for mobile Map, appears directly below Street View */
         border-radius: 10px;
     }
     #controls {
@@ -460,7 +461,7 @@ select:focus {
     }
     button,
     select {
-        width: 100%; /* Full width buttons */
+        width: 100%;
         min-width: unset;
         font-size: 1em;
         padding: 12px 20px;
@@ -489,9 +490,11 @@ select:focus {
         font-size: 1.5em;
         letter-spacing: 1px;
     }
-    #street-view,
+    #street-view {
+        height: 200px; /* Even smaller for very small screens */
+    }
     #map {
-        height: 220px; /* Even shorter on very small screens to ensure fit */
+        height: 180px; /* Even smaller for very small screens */
     }
     .modal-content {
         padding: 20px;
@@ -501,12 +504,12 @@ select:focus {
         font-size: 1em;
     }
     #modal-buttons {
-        flex-direction: column; /* Stack buttons in modal on small screens */
+        flex-direction: column;
         gap: 8px;
     }
     .modal-button {
         padding: 8px 15px;
         font-size: 0.9em;
-        width: 100%; /* Full width for modal buttons too */
+        width: 100%;
     }
 }
