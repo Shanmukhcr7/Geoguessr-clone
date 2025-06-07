@@ -156,6 +156,24 @@ function setupSynths() {
 document.documentElement.addEventListener('mousedown', initializeAudio, { once: true });
 document.documentElement.addEventListener('touchstart', initializeAudio, { once: true });
 
+/**
+ * Helper function to stop all Tone.js synths.
+ * This is crucial for preventing lingering sounds.
+ */
+function stopAllSynths() {
+    if (audioContextStarted) {
+        if (guessSynth) guessSynth.triggerRelease();
+        if (correctSynth) correctSynth.triggerRelease();
+        if (incorrectSynth) incorrectSynth.triggerRelease();
+        if (timerBeep) timerBeep.triggerRelease();
+        if (roundEndSynth) roundEndSynth.triggerRelease();
+        if (gameOverSynth) gameOverSynth.triggerRelease();
+    }
+    // Also clear any scheduled events
+    Tone.Transport.stop();
+    Tone.Transport.cancel();
+    console.log("All Tone.js synths stopped and transport cleared.");
+}
 
 // --- Custom Modal Functions ---
 
@@ -173,13 +191,11 @@ function showAlertDialog(message, onOk = () => {}, okButtonText = 'OK', isGameOv
     modalConfirmButton.style.display = 'inline-block';
 
     customModal.style.display = 'flex';
-    // Add/remove game-over class based on flag
     if (isGameOver) {
         customModal.classList.add('game-over');
     } else {
         customModal.classList.remove('game-over');
     }
-
 
     const handleOk = () => {
         onOk();
@@ -191,6 +207,7 @@ function showAlertDialog(message, onOk = () => {}, okButtonText = 'OK', isGameOv
 
     modalConfirmButton.addEventListener('click', handleOk);
     closeButton.addEventListener('click', handleOk);
+    console.log("Showing alert dialog:", message);
 }
 
 /**
@@ -228,6 +245,7 @@ function showConfirmDialog(message, onConfirm, onCancel = () => {}) {
     modalConfirmButton.addEventListener('click', handleConfirm);
     modalCancelButton.addEventListener('click', handleCancel);
     closeButton.addEventListener('click', handleCancel);
+    console.log("Showing confirm dialog:", message);
 }
 
 
@@ -277,6 +295,7 @@ function getRandomCoords(difficulty) {
  */
 function loadStreetViewImage(retries = 10) {
     streetViewDiv.innerHTML = `<p>Loading Street View...</p><div class="spinner"></div>`;
+    console.log(`Attempting to load Street View. Retries left: ${retries}`);
 
     const difficulty = difficultySelect.value;
     const coordsObj = getRandomCoords(difficulty);
@@ -284,26 +303,35 @@ function loadStreetViewImage(retries = 10) {
     const metadataUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${coords.lat},${coords.lng}&key=${GOOGLE_API_KEY}`;
 
     return fetch(metadataUrl)
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                console.error(`HTTP error! status: ${response.status} for ${metadataUrl}`);
+                throw new Error(`HTTP status ${response.status}`);
+            }
+            return response.json();
+        })
         .then((data) => {
-            if (data.status === "OK" && data.pano_id) {
+            if (data.status === "OK" && data.pano_id) { // Check for pano_id for actual Street View
                 actualLocation = coords;
                 actualCityName = coordsObj.cityName;
                 const imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=900x600&location=${coords.lat},${coords.lng}&fov=90&heading=${Math.random() * 360}&pitch=0&key=${GOOGLE_API_KEY}`;
                 streetViewDiv.innerHTML = `<img src="${imageUrl}" alt="Street View Image" onerror="this.onerror=null; this.src='https://placehold.co/900x600/334a5c/ffffff?text=Image+Load+Error'; this.alt='Error loading image';" />`;
+                console.log("Street View image loaded successfully.");
                 return true;
             } else if (retries > 0) {
-                return loadStreetViewImage(retries - 1);
+                console.warn(`No Street View pano_id for ${coords.lat},${coords.lng}. Retrying...`);
+                return loadStreetViewImage(retries - 1); // Retry with new coordinates
             } else {
                 streetViewDiv.innerHTML = `<p>No Street View available after multiple attempts. Please ensure API key is valid or try again.</p>`;
-                showAlertDialog("No Street View available for multiple generated locations. Check API key or reload.");
+                showAlertDialog("No Street View available for multiple generated locations. **Please check your Google API Key and ensure Street View Static API is enabled.** Also, reload the page.");
+                console.error("Failed to load Street View image after multiple retries. API Key or location issue suspected.");
                 return false;
             }
         })
         .catch((error) => {
             console.error("Error fetching Street View metadata:", error);
             streetViewDiv.innerHTML = `<p>Error loading Street View. Check your internet connection or API key.</p>`;
-            showAlertDialog("Error loading Street View data. Please check your internet connection or API key.");
+            showAlertDialog("Error loading Street View data. Please check your internet connection or **Google API key and ensure Street View Static API is enabled.**");
             return false;
         });
 }
@@ -317,10 +345,12 @@ function initMap() {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors',
     }).addTo(map);
+    console.log("Leaflet map initialized.");
 
     map.on("click", function (e) {
         if (guessButton.disabled === false) {
             if (guessMarker) {
+                map.removeLayer(guessMarker); // Remove old marker before adding new
                 guessMarker.setLatLng(e.latlng);
             } else {
                 guessMarker = L.marker(e.latlng, { title: "Your Guess" }).addTo(map);
@@ -328,6 +358,7 @@ function initMap() {
             if (audioContextStarted && guessSynth) {
                 guessSynth.triggerAttackRelease("C4", "8n");
             }
+            console.log("Guess marker placed at:", e.latlng);
         }
     });
 }
@@ -365,7 +396,7 @@ function startTimer() {
     timerBar.style.backgroundColor = "#00e676";
 
     clearInterval(timerInterval);
-    clearInterval(timerBeepInterval);
+    clearInterval(timerBeepInterval); // Ensure any existing timer beep interval is cleared
 
     timerInterval = setInterval(() => {
         timeLeft--;
@@ -374,7 +405,7 @@ function startTimer() {
         timerBar.style.width = `${percentage}%`;
 
         if (timeLeft <= 5 && timeLeft > 0 && audioContextStarted && timerBeep) {
-            timerBeep.triggerAttackRelease("C2", "16n");
+            timerBeep.triggerAttackRelease("C2", "16n", "+0"); // Play sound immediately
         }
 
         if (percentage > 60) {
@@ -388,6 +419,7 @@ function startTimer() {
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             clearInterval(timerBeepInterval);
+            stopAllSynths(); // Ensure all sounds stop on time out
 
             guessButton.disabled = true;
             timerP.textContent = "Time's up!";
@@ -402,8 +434,10 @@ function startTimer() {
             } else {
                  makeGuess();
             }
+            console.log("Timer ended. Calling makeGuess().");
         }
     }, 1000);
+    console.log("Timer started.");
 }
 
 /**
@@ -418,6 +452,7 @@ function showScorePopup(points) {
         scorePopup.classList.remove('active');
         scorePopup.textContent = '';
     }, { once: true });
+    console.log("Score popup displayed:", points);
 }
 
 /**
@@ -426,11 +461,14 @@ function showScorePopup(points) {
 function makeGuess() {
     if (!guessMarker && timeLeft > 0) {
         showAlertDialog("Please click on the map to make your guess!");
+        console.log("Guess not made, requesting user to click map.");
         return;
     }
 
     clearInterval(timerInterval);
     clearInterval(timerBeepInterval);
+    stopAllSynths(); // Ensure all sounds stop on guess
+
     guessButton.disabled = true;
     nextRoundButton.disabled = false;
 
@@ -459,70 +497,4 @@ function makeGuess() {
     currentScoreP.textContent = `Score: ${score}`;
 
     if (audioContextStarted) {
-        if (roundScore > (0.8 * 5000) && correctSynth) {
-            correctSynth.triggerAttackRelease(["C5", "E5", "G5"], "0.3");
-        } else if (roundScore > 0 && correctSynth) {
-            correctSynth.triggerAttackRelease("C4", "0.2");
-        } else if (incorrectSynth) {
-            incorrectSynth.triggerAttackRelease(["C3", "G#2"], "0.4");
-        }
-    }
-
-    showScorePopup(roundScore);
-
-    if (guessLatLng) {
-        resultP.textContent = `Your guess was ${distKm.toFixed(2)} km away. You scored ${roundScore} points.`;
-        if (roundScore > (0.8 * 5000)) {
-            resultP.className = "correct";
-        } else if (roundScore > (0.3 * 5000)) {
-            resultP.className = "medium-correct";
-        } else {
-            resultP.className = "incorrect";
-        }
-    } else {
-        resultP.textContent = "No guess made. You scored 0 points.";
-        resultP.className = "incorrect";
-    }
-
-    hintP.textContent = `Actual location was near ${actualCityName}.`;
-
-    if (actualMarker) map.removeLayer(actualMarker);
-    actualMarker = L.marker(actualLocation, {
-        title: "Actual Location",
-        icon: L.icon({
-            iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
-        }),
-    }).addTo(map);
-
-    if (guessLatLng) {
-        if (lineBetween) map.removeLayer(lineBetween);
-        lineBetween = L.polyline([guessLatLng, actualLocation], {
-            color: '#ff5252',
-            weight: 4,
-            opacity: 0.8,
-            dashArray: "8,8",
-        }).addTo(map);
-
-        map.fitBounds(L.latLngBounds([guessLatLng, actualLocation]), {
-            padding: [70, 70],
-        });
-    } else {
-        map.setView(actualLocation, 6);
-    }
-}
-
-/**
- * Proceeds to the next round or ends the game.
- */
-function nextRound() {
-    currentRound++;
-    // Crucial: Stop any currently playing game over sound before checking
-    if (audioContextStarted && gameOverSynth) {
-        gameOverSynth.triggerRelease(); // Stop the sound immediately if it's playing
-    }
-
-    if (currentRound > totalRounds) {
-        if (audioContextStarted && gameOverSynth) {
-            // Play game ove
+        if (roundScore > (0.8 * max
