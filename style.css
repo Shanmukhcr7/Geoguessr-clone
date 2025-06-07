@@ -426,14 +426,6 @@ select:focus {
 
 /* Responsive Design */
 @media (max-width: 900px) {
-    /* REMOVE DEBUG BORDERS AFTER TESTING */
-    /* body { border: 2px solid cyan !important; } */
-    /* .game-container { border: 2px solid magenta !important; } */
-    /* #main-grid { border: 2px solid yellow !important; } */
-    /* #street-view { border: 2px solid orange !important; } */
-    /* #map { border: 2px solid blue !important; } */
-    /* END DEBUG BORDERS */
-
     .game-container {
         width: 98vw;
         padding: 10px;
