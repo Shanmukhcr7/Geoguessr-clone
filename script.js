@@ -69,7 +69,6 @@ let currentRound = 1;
 let score = 0;
 let timerInterval = null;
 let timeLeft = timePerRound;
-let timerBeepInterval = null;
 
 const streetViewDiv = document.getElementById("street-view");
 const guessButton = document.getElementById("guess-button");
@@ -78,10 +77,13 @@ const difficultySelect = document.getElementById("difficulty");
 
 const resultP = document.getElementById("result");
 const hintP = document.getElementById("hint");
+// Updated references for score and round display
 const currentScoreP = document.getElementById("current-score");
 const currentRoundP = document.getElementById("current-round");
-const timerP = document.getElementById("timer");
-const timerBar = document.getElementById("timer-bar");
+const timerP = document.getElementById("timer"); // Still points to the correct element
+const timerBar = document.getElementById("timer-bar"); // Still points to the correct element
+
+// New: Score Pop-up element
 const scorePopup = document.getElementById("score-popup");
 
 // Custom Modal Elements
@@ -91,118 +93,17 @@ const modalConfirmButton = document.getElementById('modal-confirm-button');
 const modalCancelButton = document.getElementById('modal-cancel-button');
 const closeButton = document.querySelector('.close-button');
 
-// --- Tone.js Sound Setup ---
-let guessSynth, correctSynth, incorrectSynth, timerBeep, roundEndSynth, gameOverSynth;
-let audioContextStarted = false;
-
-// Function to initialize audio context on first user interaction
-function initializeAudio() {
-    if (audioContextStarted) return;
-    Tone.start().then(() => {
-        console.log("AudioContext started successfully!");
-        audioContextStarted = true;
-        setupSynths();
-    }).catch(e => console.error("Failed to start AudioContext:", e));
-}
-
-// Setup all synthesizers
-function setupSynths() {
-    // Basic synth for general interactions/clicks
-    guessSynth = new Tone.Synth({
-        oscillator: { type: "triangle" },
-        envelope: { attack: 0.005, decay: 0.05, sustain: 0.1, release: 0.1 }
-    }).toDestination();
-
-    // Synth for correct guesses (pleasant, rising)
-    correctSynth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: "sine" },
-        envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.3 }
-    }).toDestination();
-
-    // Synth for incorrect guesses (dissonant, falling)
-    incorrectSynth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: "sawtooth" },
-        envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.4 }
-    }).toDestination();
-
-    // Synth for timer beeps
-    timerBeep = new Tone.MembraneSynth({
-        pitchDecay: 0.05,
-        octaves: 8,
-        envelope: { attack: 0.001, decay: 0.1, sustain: 0.001, release: 0.01 }
-    }).toDestination();
-
-    // Synth for round end
-    roundEndSynth = new Tone.AMSynth({
-        harmonicity: 1.5,
-        oscillator: { type: "sine" },
-        envelope: { attack: 0.02, decay: 0.5, sustain: 0.1, release: 0.8 },
-        modulation: { type: "square" },
-        modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.01, release: 0.01 }
-    }).toDestination();
-
-    // Synth for game over
-    gameOverSynth = new Tone.DuoSynth({
-        vibratoAmount: 0.5,
-        vibratoRate: 5,
-        harmonicity: 1.5,
-        voice0: {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.02, decay: 0.5, sustain: 0.1, release: 0.8 }
-        },
-        voice1: {
-            oscillator: { type: "sine" },
-            envelope: { attack: 0.05, decay: 0.3, sustain: 0.1, release: 1 }
-        }
-    }).toDestination();
-}
-
-// Call initializeAudio on first click/interaction
-document.documentElement.addEventListener('mousedown', initializeAudio, { once: true });
-document.documentElement.addEventListener('touchstart', initializeAudio, { once: true });
-
-
-// --- Custom Modal Functions ---
-
 /**
- * Shows a custom modal with one 'OK' button.
+ * Displays a custom confirmation modal.
  * @param {string} message - The message to display.
- * @param {function} onOk - Callback function when 'OK' is clicked.
- * @param {string} okButtonText - Custom text for the OK button (defaults to 'OK').
+ * @param {function} onConfirm - Callback function if user confirms.
+ * @param {function} onCancel - Callback function if user cancels (optional).
  */
-function showAlertDialog(message, onOk = () => {}, okButtonText = 'OK') {
-    modalMessage.innerHTML = message; // Use innerHTML for potential formatting like bold
-    modalConfirmButton.textContent = okButtonText;
-    modalCancelButton.style.display = 'none'; // Hide cancel button
+function showConfirmModal(message, onConfirm, onCancel = () => {}) {
+    modalMessage.textContent = message;
+    customModal.style.display = 'flex'; // Use flex to center
     modalConfirmButton.style.display = 'inline-block';
-
-    customModal.style.display = 'flex'; // Show modal
-
-    const handleOk = () => {
-        onOk();
-        customModal.style.display = 'none';
-        modalConfirmButton.removeEventListener('click', handleOk);
-        closeButton.removeEventListener('click', handleOk);
-    };
-
-    modalConfirmButton.addEventListener('click', handleOk);
-    closeButton.addEventListener('click', handleOk);
-}
-
-/**
- * Shows a custom modal with 'Confirm' and 'Cancel' buttons.
- * @param {string} message - The message to display.
- * @param {function} onConfirm - Callback function if 'Confirm' is clicked.
- * @param {function} onCancel - Callback function if 'Cancel' is clicked (optional).
- */
-function showConfirmDialog(message, onConfirm, onCancel = () => {}) {
-    modalMessage.innerHTML = message;
-    modalConfirmButton.textContent = 'Confirm';
-    modalCancelButton.textContent = 'Cancel';
-    modalCancelButton.style.display = 'inline-block'; // Show cancel button
-    modalConfirmButton.style.display = 'inline-block';
-
-    customModal.style.display = 'flex'; // Show modal
+    modalCancelButton.style.display = 'inline-block';
 
     const handleConfirm = () => {
         onConfirm();
@@ -222,11 +123,31 @@ function showConfirmDialog(message, onConfirm, onCancel = () => {}) {
 
     modalConfirmButton.addEventListener('click', handleConfirm);
     modalCancelButton.addEventListener('click', handleCancel);
-    closeButton.addEventListener('click', handleCancel);
+    closeButton.addEventListener('click', handleCancel); // Allow closing with X button
 }
 
+/**
+ * Displays a custom alert modal (no cancel option).
+ * @param {string} message - The message to display.
+ * @param {function} onOk - Callback function when user clicks OK.
+ */
+function showAlertModal(message, onOk = () => {}) {
+    modalMessage.textContent = message;
+    customModal.style.display = 'flex';
+    modalCancelButton.style.display = 'none'; // Hide cancel button
+    modalConfirmButton.style.display = 'inline-block';
 
-// --- Game Logic Functions (with sound integration) ---
+    const handleOk = () => {
+        onOk();
+        customModal.style.display = 'none';
+        modalConfirmButton.removeEventListener('click', handleOk);
+        closeButton.removeEventListener('click', handleOk);
+    };
+
+    modalConfirmButton.addEventListener('click', handleOk);
+    closeButton.addEventListener('click', handleOk); // Allow closing with X button
+}
+
 
 /**
  * Generates random coordinates based on the selected difficulty.
@@ -239,17 +160,18 @@ function getRandomCoords(difficulty) {
     const city = cityList[Math.floor(Math.random() * cityList.length)];
     let latOffset, lngOffset;
 
+    // Adjust offsets based on difficulty to get a point near the city
     switch (difficulty) {
         case "easy":
-            latOffset = (Math.random() - 0.5) * 0.005;
+            latOffset = (Math.random() - 0.5) * 0.005; // Very close to city center
             lngOffset = (Math.random() - 0.5) * 0.005;
             break;
         case "medium":
-            latOffset = (Math.random() - 0.5) * 0.02;
+            latOffset = (Math.random() - 0.5) * 0.02; // Within city limits
             lngOffset = (Math.random() - 0.5) * 0.02;
             break;
         case "hard":
-            latOffset = (Math.random() - 0.5) * 0.2;
+            latOffset = (Math.random() - 0.5) * 0.2; // Wider area, potentially outskirts or rural
             lngOffset = (Math.random() - 0.5) * 0.2;
             break;
         default:
@@ -271,6 +193,7 @@ function getRandomCoords(difficulty) {
  * @returns {Promise<boolean>} - True if image loaded successfully, false otherwise.
  */
 function loadStreetViewImage(retries = 10) {
+    // Show loading spinner and text
     streetViewDiv.innerHTML = `<p>Loading Street View...</p><div class="spinner"></div>`;
 
     const difficulty = difficultySelect.value;
@@ -281,24 +204,25 @@ function loadStreetViewImage(retries = 10) {
     return fetch(metadataUrl)
         .then((response) => response.json())
         .then((data) => {
-            if (data.status === "OK" && data.pano_id) {
+            if (data.status === "OK" && data.pano_id) { // Check for pano_id for actual Street View
                 actualLocation = coords;
                 actualCityName = coordsObj.cityName;
+                // Use a larger size for better quality, fit with CSS object-fit
                 const imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=900x600&location=${coords.lat},${coords.lng}&fov=90&heading=${Math.random() * 360}&pitch=0&key=${GOOGLE_API_KEY}`;
                 streetViewDiv.innerHTML = `<img src="${imageUrl}" alt="Street View Image" onerror="this.onerror=null; this.src='https://placehold.co/900x600/334a5c/ffffff?text=Image+Load+Error'; this.alt='Error loading image';" />`;
                 return true;
             } else if (retries > 0) {
-                return loadStreetViewImage(retries - 1);
+                return loadStreetViewImage(retries - 1); // Retry with new coordinates
             } else {
                 streetViewDiv.innerHTML = `<p>No Street View available after multiple attempts. Please ensure API key is valid or try again.</p>`;
-                showAlertDialog("No Street View available for multiple generated locations. Check API key or reload.");
+                showAlertModal("No Street View available for multiple generated locations. Check API key or reload.");
                 return false;
             }
         })
         .catch((error) => {
             console.error("Error fetching Street View metadata:", error);
             streetViewDiv.innerHTML = `<p>Error loading Street View. Check your internet connection or API key.</p>`;
-            showAlertDialog("Error loading Street View data. Please check your internet connection or API key.");
+            showAlertModal("Error loading Street View data. Please check your internet connection or API key.");
             return false;
         });
 }
@@ -307,21 +231,20 @@ function loadStreetViewImage(retries = 10) {
  * Initializes the Leaflet map.
  */
 function initMap() {
+    // Set initial view to a global perspective
     map = L.map("map").setView([20, 0], 2);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors',
     }).addTo(map);
 
+    // Event listener for map clicks to place/move guess marker
     map.on("click", function (e) {
-        if (guessButton.disabled === false) {
+        if (guessButton.disabled === false) { // Only allow placing marker if guess isn't made yet
             if (guessMarker) {
                 guessMarker.setLatLng(e.latlng);
             } else {
                 guessMarker = L.marker(e.latlng, { title: "Your Guess" }).addTo(map);
-            }
-            if (audioContextStarted && guessSynth) {
-                guessSynth.triggerAttackRelease("C4", "8n");
             }
         }
     });
@@ -357,45 +280,34 @@ function startTimer() {
     timeLeft = timePerRound;
     timerP.textContent = `Time left: ${timeLeft}s`;
     timerBar.style.width = "100%";
-    timerBar.style.backgroundColor = "#00e676";
+    timerBar.style.backgroundColor = "#00e676"; // Green at start
 
-    clearInterval(timerInterval);
-    clearInterval(timerBeepInterval); // Clear any existing timer beep interval
-
+    clearInterval(timerInterval); // Clear any existing timer
     timerInterval = setInterval(() => {
         timeLeft--;
         timerP.textContent = `Time left: ${timeLeft}s`;
         const percentage = (timeLeft / timePerRound) * 100;
         timerBar.style.width = `${percentage}%`;
 
-        if (timeLeft <= 5 && timeLeft > 0 && audioContextStarted && timerBeep) {
-            timerBeep.triggerAttackRelease("C2", "16n");
-        }
-
+        // Change timer bar color based on time left
         if (percentage > 60) {
-            timerBar.style.backgroundColor = "#00e676";
+            timerBar.style.backgroundColor = "#00e676"; // Green
         } else if (percentage > 30) {
-            timerBar.style.backgroundColor = "#ffa000";
+            timerBar.style.backgroundColor = "#ffa000"; // Amber
         } else {
-            timerBar.style.backgroundColor = "#ff5252";
+            timerBar.style.backgroundColor = "#ff5252"; // Red
         }
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            clearInterval(timerBeepInterval);
-
             guessButton.disabled = true;
             timerP.textContent = "Time's up!";
             nextRoundButton.disabled = false;
-
-            if (audioContextStarted && roundEndSynth) {
-                roundEndSynth.triggerAttackRelease("C3", "0.5");
-            }
-
+            // If time runs out and no guess was made, automatically reveal the answer
             if (!guessMarker) {
-                showAlertDialog("Time's up! No guess was made for this round. You scored 0 points.", makeGuess);
+                showAlertModal("Time's up! No guess was made for this round. You scored 0 points.", makeGuess);
             } else {
-                 makeGuess();
+                 makeGuess(); // Process the existing guess if any
             }
         }
     }, 1000);
@@ -407,25 +319,26 @@ function startTimer() {
  */
 function showScorePopup(points) {
     scorePopup.textContent = `+${points} points!`;
-    scorePopup.classList.add('active');
+    scorePopup.classList.add('active'); // Add class to trigger animation
 
+    // Remove the class after the animation duration to allow re-triggering
     scorePopup.addEventListener('animationend', () => {
         scorePopup.classList.remove('active');
-        scorePopup.textContent = '';
-    }, { once: true });
+        scorePopup.textContent = ''; // Clear text after animation
+    }, { once: true }); // Ensure listener is removed after one use
 }
 
 /**
  * Processes the user's guess, calculates score, and reveals the actual location.
  */
 function makeGuess() {
+    // Only proceed if a guess marker exists or time has run out
     if (!guessMarker && timeLeft > 0) {
-        showAlertDialog("Please click on the map to make your guess!");
+        showAlertModal("Please click on the map to make your guess!");
         return;
     }
 
     clearInterval(timerInterval);
-    clearInterval(timerBeepInterval); // Stop beeps when guess is made
     guessButton.disabled = true;
     nextRoundButton.disabled = false;
 
@@ -442,27 +355,19 @@ function makeGuess() {
         );
 
         const maxScore = 5000;
-        const maxDistance = 15000;
+        const maxDistance = 15000; // Max distance for full scoring decay (e.g., across a continent)
 
         if (distKm < maxDistance) {
-            roundScore = maxScore * Math.pow(1 - distKm / maxDistance, 1.5);
+            // Scoring logic: higher score for closer guesses
+            roundScore = maxScore * Math.pow(1 - distKm / maxDistance, 1.5); // Using 1.5 for a slightly steeper decay
         }
         roundScore = Math.round(roundScore);
     }
 
     score += roundScore;
-    currentScoreP.textContent = `Score: ${score}`;
+    currentScoreP.textContent = `Score: ${score}`; // Update permanent score display
 
-    if (audioContextStarted) {
-        if (roundScore > (0.8 * 5000) && correctSynth) {
-            correctSynth.triggerAttackRelease(["C5", "E5", "G5"], "0.3");
-        } else if (roundScore > 0 && correctSynth) { // Still a 'correct' sound for any points
-            correctSynth.triggerAttackRelease("C4", "0.2");
-        } else if (incorrectSynth) {
-            incorrectSynth.triggerAttackRelease(["C3", "G#2"], "0.4");
-        }
-    }
-
+    // Show animated score pop-up
     showScorePopup(roundScore);
 
     if (guessLatLng) {
@@ -470,7 +375,7 @@ function makeGuess() {
         if (roundScore > (0.8 * 5000)) {
             resultP.className = "correct";
         } else if (roundScore > (0.3 * 5000)) {
-            resultP.className = "medium-correct";
+            resultP.className = "medium-correct"; // New class for medium scores
         } else {
             resultP.className = "incorrect";
         }
@@ -481,29 +386,33 @@ function makeGuess() {
 
     hintP.textContent = `Actual location was near ${actualCityName}.`;
 
+    // Display actual location marker
     if (actualMarker) map.removeLayer(actualMarker);
     actualMarker = L.marker(actualLocation, {
         title: "Actual Location",
         icon: L.icon({
-            iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
+            iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png", // Red dot for actual location
             iconSize: [32, 32],
             iconAnchor: [16, 32],
         }),
     }).addTo(map);
 
+    // Draw line between guess and actual location
     if (guessLatLng) {
         if (lineBetween) map.removeLayer(lineBetween);
         lineBetween = L.polyline([guessLatLng, actualLocation], {
-            color: '#ff5252',
+            color: '#ff5252', // Red line for distance
             weight: 4,
             opacity: 0.8,
             dashArray: "8,8",
         }).addTo(map);
 
+        // Fit map view to show both markers
         map.fitBounds(L.latLngBounds([guessLatLng, actualLocation]), {
-            padding: [70, 70],
+            padding: [70, 70], // Add padding around the bounds
         });
     } else {
+        // If no guess, just pan to actual location
         map.setView(actualLocation, 6);
     }
 }
@@ -513,13 +422,92 @@ function makeGuess() {
  */
 function nextRound() {
     currentRound++;
-    // Crucial: Stop any currently playing game over sound before checking
-    if (audioContextStarted && gameOverSynth) {
-        gameOverSynth.triggerRelease(); // Stop the sound immediately if it's playing
+    if (currentRound > totalRounds) {
+        showAlertModal(`Game Over! Your total score is ${score}. Thanks for playing!`, resetGame);
+        return;
     }
 
-    if (currentRound > totalRounds) {
-        if (audioContextStarted && gameOverSynth) {
-            gameOverSynth.triggerAttackRelease(["C3", "F2"], "1.5s"); // Play game over sound for a fixed duration
+    currentRoundP.textContent = `Round: ${currentRound} / ${totalRounds}`; // Update permanent round display
+    resultP.textContent = "";
+    hintP.textContent = "";
+    guessButton.disabled = false;
+    nextRoundButton.disabled = true;
+
+    // Clear markers and line from previous round
+    if (guessMarker) {
+        map.removeLayer(guessMarker);
+        guessMarker = null;
+    }
+    if (actualMarker) {
+        map.removeLayer(actualMarker);
+        actualMarker = null;
+    }
+    if (lineBetween) {
+        map.removeLayer(lineBetween);
+        lineBetween = null;
+    }
+
+    // Load new Street View image and start timer
+    loadStreetViewImage().then((loaded) => {
+        if (loaded) {
+            map.setView([20, 0], 2); // Reset map view to global
+            startTimer();
         }
-        // Use s
+    });
+}
+
+/**
+ * Resets the game to its initial state.
+ */
+function resetGame() {
+    currentRound = 1;
+    score = 0;
+    currentScoreP.textContent = "Score: 0"; // Update permanent score display
+    currentRoundP.textContent = `Round: 1 / ${totalRounds}`; // Update permanent round display
+    resultP.textContent = "";
+    hintP.textContent = "";
+    guessButton.disabled = false;
+    nextRoundButton.disabled = true;
+
+    clearInterval(timerInterval); // Stop any running timer
+
+    // Clear markers and line
+    if (guessMarker) {
+        map.removeLayer(guessMarker);
+        guessMarker = null;
+    }
+    if (actualMarker) {
+        map.removeLayer(actualMarker);
+        actualMarker = null;
+    }
+    if (lineBetween) {
+        map.removeLayer(lineBetween);
+        lineBetween = null;
+    }
+
+    // Start a new game
+    loadStreetViewImage().then((loaded) => {
+        if (loaded) {
+            map.setView([20, 0], 2); // Reset map view to global
+            startTimer();
+        }
+    });
+}
+
+// Event Listeners
+guessButton.addEventListener("click", makeGuess);
+nextRoundButton.addEventListener("click", nextRound);
+
+difficultySelect.addEventListener("change", () => {
+    showConfirmModal("Changing difficulty will reset the game. Continue?", () => {
+        resetGame();
+    }, () => {
+        // If user cancels, no action needed as selection state isn't critical
+    });
+});
+
+// Initial game setup when window loads
+window.onload = () => {
+    initMap();
+    resetGame(); // Starts the first round
+};
