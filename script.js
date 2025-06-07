@@ -69,6 +69,7 @@ let currentRound = 1;
 let score = 0;
 let timerInterval = null;
 let timeLeft = timePerRound;
+let timerBeepInterval = null; // New: for timer warning sound
 
 const streetViewDiv = document.getElementById("street-view");
 const guessButton = document.getElementById("guess-button");
@@ -77,13 +78,10 @@ const difficultySelect = document.getElementById("difficulty");
 
 const resultP = document.getElementById("result");
 const hintP = document.getElementById("hint");
-// Updated references for score and round display
 const currentScoreP = document.getElementById("current-score");
 const currentRoundP = document.getElementById("current-round");
-const timerP = document.getElementById("timer"); // Still points to the correct element
-const timerBar = document.getElementById("timer-bar"); // Still points to the correct element
-
-// New: Score Pop-up element
+const timerP = document.getElementById("timer");
+const timerBar = document.getElementById("timer-bar");
 const scorePopup = document.getElementById("score-popup");
 
 // Custom Modal Elements
@@ -92,6 +90,79 @@ const modalMessage = document.getElementById('modal-message');
 const modalConfirmButton = document.getElementById('modal-confirm-button');
 const modalCancelButton = document.getElementById('modal-cancel-button');
 const closeButton = document.querySelector('.close-button');
+
+// --- Tone.js Sound Setup ---
+let guessSynth, correctSynth, incorrectSynth, timerBeep, roundEndSynth, gameOverSynth;
+let audioContextStarted = false;
+
+// Function to initialize audio context on first user interaction
+function initializeAudio() {
+    if (audioContextStarted) return;
+    Tone.start().then(() => {
+        console.log("AudioContext started successfully!");
+        audioContextStarted = true;
+        setupSynths();
+    }).catch(e => console.error("Failed to start AudioContext:", e));
+}
+
+// Setup all synthesizers
+function setupSynths() {
+    // Basic synth for general interactions/clicks
+    guessSynth = new Tone.Synth({
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.005, decay: 0.05, sustain: 0.1, release: 0.1 }
+    }).toDestination();
+
+    // Synth for correct guesses (pleasant, rising)
+    correctSynth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.3 }
+    }).toDestination();
+
+    // Synth for incorrect guesses (dissonant, falling)
+    incorrectSynth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "sawtooth" },
+        envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.4 }
+    }).toDestination();
+
+    // Synth for timer beeps
+    timerBeep = new Tone.MembraneSynth({
+        pitchDecay: 0.05,
+        octaves: 8,
+        envelope: { attack: 0.001, decay: 0.1, sustain: 0.001, release: 0.01 }
+    }).toDestination();
+
+    // Synth for round end
+    roundEndSynth = new Tone.AMSynth({
+        harmonicity: 1.5,
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.02, decay: 0.5, sustain: 0.1, release: 0.8 },
+        modulation: { type: "square" },
+        modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.01, release: 0.01 }
+    }).toDestination();
+
+    // Synth for game over
+    gameOverSynth = new Tone.DuoSynth({
+        vibratoAmount: 0.5,
+        vibratoRate: 5,
+        harmonicity: 1.5,
+        voice0: {
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.02, decay: 0.5, sustain: 0.1, release: 0.8 }
+        },
+        voice1: {
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.05, decay: 0.3, sustain: 0.1, release: 1 }
+        }
+    }).toDestination();
+}
+
+// Call initializeAudio on first click/interaction
+document.documentElement.addEventListener('mousedown', initializeAudio, { once: true });
+document.documentElement.addEventListener('touchstart', initializeAudio, { once: true });
+
+
+// --- Custom Modal Functions (unchanged) ---
 
 /**
  * Displays a custom confirmation modal.
@@ -148,6 +219,8 @@ function showAlertModal(message, onOk = () => {}) {
     closeButton.addEventListener('click', handleOk); // Allow closing with X button
 }
 
+
+// --- Game Logic Functions (with sound integration) ---
 
 /**
  * Generates random coordinates based on the selected difficulty.
@@ -207,7 +280,6 @@ function loadStreetViewImage(retries = 10) {
             if (data.status === "OK" && data.pano_id) { // Check for pano_id for actual Street View
                 actualLocation = coords;
                 actualCityName = coordsObj.cityName;
-                // Use a larger size for better quality, fit with CSS object-fit
                 const imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=900x600&location=${coords.lat},${coords.lng}&fov=90&heading=${Math.random() * 360}&pitch=0&key=${GOOGLE_API_KEY}`;
                 streetViewDiv.innerHTML = `<img src="${imageUrl}" alt="Street View Image" onerror="this.onerror=null; this.src='https://placehold.co/900x600/334a5c/ffffff?text=Image+Load+Error'; this.alt='Error loading image';" />`;
                 return true;
@@ -231,20 +303,21 @@ function loadStreetViewImage(retries = 10) {
  * Initializes the Leaflet map.
  */
 function initMap() {
-    // Set initial view to a global perspective
     map = L.map("map").setView([20, 0], 2);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors',
     }).addTo(map);
 
-    // Event listener for map clicks to place/move guess marker
     map.on("click", function (e) {
         if (guessButton.disabled === false) { // Only allow placing marker if guess isn't made yet
             if (guessMarker) {
                 guessMarker.setLatLng(e.latlng);
             } else {
                 guessMarker = L.marker(e.latlng, { title: "Your Guess" }).addTo(map);
+            }
+            if (audioContextStarted && guessSynth) {
+                guessSynth.triggerAttackRelease("C4", "8n"); // Play a click sound
             }
         }
     });
@@ -283,11 +356,17 @@ function startTimer() {
     timerBar.style.backgroundColor = "#00e676"; // Green at start
 
     clearInterval(timerInterval); // Clear any existing timer
+    clearInterval(timerBeepInterval); // Clear any existing timer beep interval
+
     timerInterval = setInterval(() => {
         timeLeft--;
         timerP.textContent = `Time left: ${timeLeft}s`;
         const percentage = (timeLeft / timePerRound) * 100;
         timerBar.style.width = `${percentage}%`;
+
+        if (timeLeft <= 5 && timeLeft > 0 && audioContextStarted && timerBeep) { // Beep warning in last 5 seconds
+            timerBeep.triggerAttackRelease("C2", "16n");
+        }
 
         // Change timer bar color based on time left
         if (percentage > 60) {
@@ -300,10 +379,14 @@ function startTimer() {
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
+            clearInterval(timerBeepInterval); // Ensure beeps stop
             guessButton.disabled = true;
             timerP.textContent = "Time's up!";
             nextRoundButton.disabled = false;
-            // If time runs out and no guess was made, automatically reveal the answer
+            if (audioContextStarted && roundEndSynth) {
+                roundEndSynth.triggerAttackRelease("C3", "0.5"); // Round end sound
+            }
+
             if (!guessMarker) {
                 showAlertModal("Time's up! No guess was made for this round. You scored 0 points.", makeGuess);
             } else {
@@ -339,6 +422,7 @@ function makeGuess() {
     }
 
     clearInterval(timerInterval);
+    clearInterval(timerBeepInterval); // Ensure beeps stop when guess is made
     guessButton.disabled = true;
     nextRoundButton.disabled = false;
 
@@ -355,19 +439,28 @@ function makeGuess() {
         );
 
         const maxScore = 5000;
-        const maxDistance = 15000; // Max distance for full scoring decay (e.g., across a continent)
+        const maxDistance = 15000;
 
         if (distKm < maxDistance) {
-            // Scoring logic: higher score for closer guesses
-            roundScore = maxScore * Math.pow(1 - distKm / maxDistance, 1.5); // Using 1.5 for a slightly steeper decay
+            roundScore = maxScore * Math.pow(1 - distKm / maxDistance, 1.5);
         }
         roundScore = Math.round(roundScore);
     }
 
     score += roundScore;
-    currentScoreP.textContent = `Score: ${score}`; // Update permanent score display
+    currentScoreP.textContent = `Score: ${score}`;
 
-    // Show animated score pop-up
+    // Play sound based on score
+    if (audioContextStarted) {
+        if (roundScore > (0.8 * 5000) && correctSynth) {
+            correctSynth.triggerAttackRelease(["C5", "E5", "G5"], "0.3"); // Correct chord
+        } else if (roundScore > 0 && incorrectSynth) {
+            correctSynth.triggerAttackRelease("C4", "0.2"); // A less exciting correct sound
+        } else if (incorrectSynth) {
+            incorrectSynth.triggerAttackRelease(["C3", "G#2"], "0.4"); // Incorrect dissonant chord
+        }
+    }
+
     showScorePopup(roundScore);
 
     if (guessLatLng) {
@@ -375,7 +468,7 @@ function makeGuess() {
         if (roundScore > (0.8 * 5000)) {
             resultP.className = "correct";
         } else if (roundScore > (0.3 * 5000)) {
-            resultP.className = "medium-correct"; // New class for medium scores
+            resultP.className = "medium-correct";
         } else {
             resultP.className = "incorrect";
         }
@@ -386,33 +479,29 @@ function makeGuess() {
 
     hintP.textContent = `Actual location was near ${actualCityName}.`;
 
-    // Display actual location marker
     if (actualMarker) map.removeLayer(actualMarker);
     actualMarker = L.marker(actualLocation, {
         title: "Actual Location",
         icon: L.icon({
-            iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png", // Red dot for actual location
+            iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
             iconSize: [32, 32],
             iconAnchor: [16, 32],
         }),
     }).addTo(map);
 
-    // Draw line between guess and actual location
     if (guessLatLng) {
         if (lineBetween) map.removeLayer(lineBetween);
         lineBetween = L.polyline([guessLatLng, actualLocation], {
-            color: '#ff5252', // Red line for distance
+            color: '#ff5252',
             weight: 4,
             opacity: 0.8,
             dashArray: "8,8",
         }).addTo(map);
 
-        // Fit map view to show both markers
         map.fitBounds(L.latLngBounds([guessLatLng, actualLocation]), {
-            padding: [70, 70], // Add padding around the bounds
+            padding: [70, 70],
         });
     } else {
-        // If no guess, just pan to actual location
         map.setView(actualLocation, 6);
     }
 }
@@ -423,17 +512,19 @@ function makeGuess() {
 function nextRound() {
     currentRound++;
     if (currentRound > totalRounds) {
+        if (audioContextStarted && gameOverSynth) {
+            gameOverSynth.triggerAttackRelease(["C3", "F2"], "2s"); // Game Over sound
+        }
         showAlertModal(`Game Over! Your total score is ${score}. Thanks for playing!`, resetGame);
         return;
     }
 
-    currentRoundP.textContent = `Round: ${currentRound} / ${totalRounds}`; // Update permanent round display
+    currentRoundP.textContent = `Round: ${currentRound} / ${totalRounds}`;
     resultP.textContent = "";
     hintP.textContent = "";
     guessButton.disabled = false;
     nextRoundButton.disabled = true;
 
-    // Clear markers and line from previous round
     if (guessMarker) {
         map.removeLayer(guessMarker);
         guessMarker = null;
@@ -447,10 +538,9 @@ function nextRound() {
         lineBetween = null;
     }
 
-    // Load new Street View image and start timer
     loadStreetViewImage().then((loaded) => {
         if (loaded) {
-            map.setView([20, 0], 2); // Reset map view to global
+            map.setView([20, 0], 2);
             startTimer();
         }
     });
@@ -462,16 +552,16 @@ function nextRound() {
 function resetGame() {
     currentRound = 1;
     score = 0;
-    currentScoreP.textContent = "Score: 0"; // Update permanent score display
-    currentRoundP.textContent = `Round: 1 / ${totalRounds}`; // Update permanent round display
+    currentScoreP.textContent = "Score: 0";
+    currentRoundP.textContent = `Round: 1 / ${totalRounds}`;
     resultP.textContent = "";
     hintP.textContent = "";
     guessButton.disabled = false;
     nextRoundButton.disabled = true;
 
-    clearInterval(timerInterval); // Stop any running timer
+    clearInterval(timerInterval);
+    clearInterval(timerBeepInterval);
 
-    // Clear markers and line
     if (guessMarker) {
         map.removeLayer(guessMarker);
         guessMarker = null;
@@ -485,10 +575,9 @@ function resetGame() {
         lineBetween = null;
     }
 
-    // Start a new game
     loadStreetViewImage().then((loaded) => {
         if (loaded) {
-            map.setView([20, 0], 2); // Reset map view to global
+            map.setView([20, 0], 2);
             startTimer();
         }
     });
@@ -502,12 +591,14 @@ difficultySelect.addEventListener("change", () => {
     showConfirmModal("Changing difficulty will reset the game. Continue?", () => {
         resetGame();
     }, () => {
-        // If user cancels, no action needed as selection state isn't critical
+        // If user cancels, no action needed
     });
 });
 
 // Initial game setup when window loads
 window.onload = () => {
     initMap();
-    resetGame(); // Starts the first round
+    resetGame();
+    // No sound on initial load, only on user interaction
 };
+
