@@ -16,6 +16,7 @@ body {
     align-items: center;
     position: relative;
     overflow-x: hidden; /* Prevent horizontal scroll */
+    font-size: 16px; /* Base font size for rem units */
 }
 
 /* Canvas for Network Animation */
@@ -37,7 +38,9 @@ body {
     align-items: center;
     width: 95vw; /* Fluid width */
     max-width: 1300px;
-    padding: 20px;
+    padding: 1.25rem; /* 20px -> 1.25rem */
+    margin-top: 1rem; /* Add some top margin to center content better */
+    margin-bottom: 1rem;
 }
 
 /* Header for Title and Game Stats */
@@ -46,8 +49,9 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 20px;
-    padding: 0 10px;
+    margin-bottom: 1.25rem; /* 20px -> 1.25rem */
+    padding: 0 0.625rem; /* 10px -> 0.625rem */
+    flex-wrap: wrap; /* Allow header content to wrap */
 }
 
 h1 {
@@ -56,17 +60,18 @@ h1 {
     font-weight: 700;
     color: #00e676;
     text-shadow: 0 0 15px rgba(0, 230, 118, 0.5), 0 0 5px rgba(0, 230, 118, 0.8);
-    letter-spacing: 2px;
+    letter-spacing: 0.125rem; /* 2px -> 0.125rem */
     font-size: 2.5em;
     text-align: left;
     flex-shrink: 1;
     min-width: 0;
+    margin-right: 1rem; /* Space between title and stats on wider screens */
 }
 
 #top-right-stats {
     display: flex;
     align-items: flex-start;
-    gap: 20px; /* Space between game stats and timer */
+    gap: 1.25rem; /* 20px -> 1.25rem */
     flex-wrap: wrap;
     justify-content: flex-end;
 }
@@ -76,9 +81,9 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    padding: 10px 15px;
+    padding: 0.625rem 0.9375rem; /* 10px 15px -> 0.625rem 0.9375rem */
     background: #1a2c3a;
-    border-radius: 10px;
+    border-radius: 0.625rem; /* 10px -> 0.625rem */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(0, 230, 118, 0.3);
     font-size: 1.1em;
@@ -88,23 +93,23 @@ h1 {
 
 #current-score,
 #current-round {
-    margin: 3px 0;
+    margin: 0.1875rem 0; /* 3px -> 0.1875rem */
     color: #e0e6eb;
 }
 
 #main-grid {
     display: grid;
     grid-template-columns: 1fr 1fr; /* Default: two columns for larger screens */
-    gap: 25px;
+    gap: 1.5625rem; /* 25px -> 1.5625rem */
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 1.5625rem; /* 25px -> 1.5625rem */
 }
 
 #street-view,
 #map {
     width: 100%;
-    height: 500px; /* Default large screen height */
-    border-radius: 15px;
+    height: 31.25rem; /* 500px -> 31.25rem (default large screen height) */
+    border-radius: 0.9375rem; /* 15px -> 0.9375rem */
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     background: #1a2c3a;
@@ -129,23 +134,23 @@ h1 {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 0.9375rem; /* 15px -> 0.9375rem */
+    margin-bottom: 1.25rem; /* 20px -> 1.25rem */
 }
 
 button,
 select {
-    padding: 16px 28px;
+    padding: 1rem 1.75rem; /* 16px 28px -> 1rem 1.75rem */
     font-size: 1.1em;
     border: none;
-    border-radius: 10px;
+    border-radius: 0.625rem; /* 10px -> 0.625rem */
     cursor: pointer;
     font-weight: 600;
     transition: all 0.3s ease;
-    min-width: 150px;
+    min-width: 9.375rem; /* 150px -> 9.375rem */
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.05rem; /* 0.8px -> 0.05rem */
     background: linear-gradient(145deg, #1f354a, #142433);
     color: #e0e6eb;
     border: 1px solid #00e676;
@@ -153,13 +158,13 @@ select {
 
 button:hover:not(:disabled),
 select:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    transform: translateY(-0.1875rem); /* 3px -> 0.1875rem */
+    box-shadow: 0 0.625rem 1.25rem rgba(0, 0, 0, 0.5); /* 10px 20px -> 0.625rem 1.25rem */
 }
 
 button:active:not(:disabled) {
     transform: translateY(0);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3); /* 4px 8px -> 0.25rem 0.5rem */
 }
 
 button:disabled,
@@ -167,30 +172,30 @@ select:disabled {
     cursor: not-allowed;
     background: #334a5c;
     color: #99aab5;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.3); /* 2px 5px -> 0.125rem 0.3125rem */
     transform: none;
-    border: none;
+    /* border: none; - Removed, as it's redundant if base button has no border */
 }
 
 /* Specific Button Colors */
 button#guess-button {
     background: linear-gradient(145deg, #00b894, #00887a);
     color: white;
-    border: none;
+    /* border: none; - Removed, as it's redundant */
 }
 button#guess-button:hover:not(:disabled) {
     background: linear-gradient(145deg, #00b894, #00887a);
-    box-shadow: 0 10px 20px rgba(0, 184, 148, 0.4);
+    box-shadow: 0 0.625rem 1.25rem rgba(0, 184, 148, 0.4);
 }
 
 button#next-round-button {
     background: linear-gradient(145deg, #3498db, #2980b9);
     color: white;
-    border: none;
+    /* border: none; - Removed, as it's redundant */
 }
 button#next-round-button:hover:not(:disabled) {
     background: linear-gradient(145deg, #3498db, #2980b9);
-    box-shadow: 0 10px 20px rgba(52, 152, 219, 0.4);
+    box-shadow: 0 0.625rem 1.25rem rgba(52, 152, 219, 0.4);
 }
 
 select {
@@ -202,13 +207,13 @@ select {
     appearance: none;
     background-image: url('data:image/svg+xml;utf8,<svg fill="%23e0e6eb" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
     background-repeat: no-repeat;
-    background-position: right 18px center;
-    padding-right: 45px;
+    background-position: right 1.125rem center; /* 18px -> 1.125rem */
+    padding-right: 2.8125rem; /* 45px -> 2.8125rem */
 }
 select:focus {
     outline: none;
     border-color: #00e676;
-    box-shadow: 0 0 0 4px rgba(0, 230, 118, 0.3);
+    box-shadow: 0 0 0 0.25rem rgba(0, 230, 118, 0.3); /* 4px -> 0.25rem */
 }
 
 
@@ -217,15 +222,15 @@ select:focus {
     text-align: center;
     font-size: 1.15em;
     background: #1a2c3a;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    padding: 1.5625rem; /* 25px -> 1.5625rem */
+    border-radius: 0.9375rem; /* 15px -> 0.9375rem */
+    box-shadow: 0 0.5rem 1.5625rem rgba(0, 0, 0, 0.5); /* 8px 25px -> 0.5rem 1.5625rem */
     border: 1px solid rgba(0, 230, 118, 0.3);
 }
 
 #result {
     font-weight: 700;
-    margin-top: 15px;
+    margin-top: 0.9375rem; /* 15px -> 0.9375rem */
     font-size: 1.3em;
 }
 #result.correct { color: #00e676; }
@@ -233,7 +238,7 @@ select:focus {
 #result.incorrect { color: #ff5252; }
 
 #hint {
-    margin-top: 10px;
+    margin-top: 0.625rem; /* 10px -> 0.625rem */
     font-style: italic;
     color: #a0a6b0;
     font-size: 0.95em;
@@ -249,19 +254,19 @@ select:focus {
     font-size: 1.2em;
     font-weight: bold;
     color: #ffa000;
-    text-shadow: 0 0 8px rgba(255, 160, 0, 0.5);
-    margin-bottom: 5px;
+    text-shadow: 0 0 0.5rem rgba(255, 160, 0, 0.5); /* 8px -> 0.5rem */
+    margin-bottom: 0.3125rem; /* 5px -> 0.3125rem */
 }
 
 #timer-bar-container {
     position: relative;
-    width: 150px;
-    height: 15px;
+    width: 9.375rem; /* 150px -> 9.375rem */
+    height: 0.9375rem; /* 15px -> 0.9375rem */
     background: #334a5c;
-    border-radius: 8px;
+    border-radius: 0.5rem; /* 8px -> 0.5rem */
     margin: 0;
     overflow: hidden;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.3); /* 2px 5px -> 0.125rem 0.3125rem */
     border: 1px solid rgba(0, 230, 118, 0.3);
 }
 
@@ -270,18 +275,18 @@ select:focus {
     background-color: #00e676;
     width: 100%;
     transition: width 0.9s linear;
-    border-radius: 8px;
+    border-radius: 0.5rem; /* 8px -> 0.5rem */
 }
 
 /* Loading Spinner */
 .spinner {
-    border: 4px solid rgba(255, 255, 255, 0.2);
-    border-top: 4px solid #00e676;
+    border: 0.25rem solid rgba(255, 255, 255, 0.2); /* 4px -> 0.25rem */
+    border-top: 0.25rem solid #00e676; /* 4px -> 0.25rem */
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 2.5rem; /* 40px -> 2.5rem */
+    height: 2.5rem; /* 40px -> 2.5rem */
     animation: spin 1s linear infinite;
-    margin-top: 20px;
+    margin-top: 1.25rem; /* 20px -> 1.25rem */
 }
 
 @keyframes spin {
@@ -291,7 +296,7 @@ select:focus {
 
 /* Custom Modal Styling */
 .modal {
-    display: none;
+    display: none; /* Controlled by JS to be flex when active */
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -300,20 +305,20 @@ select:focus {
     height: 100%;
     overflow: auto;
     background-color: rgba(0,0,0,0.7);
-    justify-content: center;
-    align-items: center;
+    justify-content: center; /* Used when display is flex */
+    align-items: center; /* Used when display is flex */
 }
 
 .modal-content {
     background-color: #1a2c3a;
-    margin: auto;
-    padding: 30px;
+    margin: 1.5rem auto; /* Adjusted vertical margin for better centering */
+    padding: 1.875rem; /* 30px -> 1.875rem */
     border: 1px solid #00e676;
-    border-radius: 15px;
+    border-radius: 0.9375rem; /* 15px -> 0.9375rem */
     width: 80%;
-    max-width: 400px;
+    max-width: 25rem; /* 400px -> 25rem */
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.7); /* 10px 30px -> 0.625rem 1.875rem */
     position: relative;
     color: #e0e6eb;
 }
@@ -321,43 +326,45 @@ select:focus {
 .close-button {
     color: #aaa;
     position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
+    top: 0.9375rem; /* 15px -> 0.9375rem */
+    right: 1.25rem; /* 20px -> 1.25rem */
+    font-size: 1.75rem; /* 28px -> 1.75rem */
     font-weight: bold;
     cursor: pointer;
+    transition: color 0.2s ease-in-out;
 }
 .close-button:hover,
 .close-button:focus {
     color: #ff5252;
     text-decoration: none;
-    cursor: pointer;
 }
 
 #modal-message {
     font-size: 1.2em;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem; /* 20px -> 1.25rem */
 }
 
 #modal-buttons {
     display: flex;
     justify-content: center;
-    gap: 15px;
+    gap: 0.9375rem; /* 15px -> 0.9375rem */
+    flex-wrap: wrap; /* Allow buttons to wrap */
 }
 
 .modal-button {
-    padding: 10px 20px;
+    padding: 0.625rem 1.25rem; /* 10px 20px -> 0.625rem 1.25rem */
     border: none;
-    border-radius: 8px;
+    border-radius: 0.5rem; /* 8px -> 0.5rem */
     cursor: pointer;
     font-weight: 600;
     transition: background-color 0.3s ease, transform 0.1s ease;
     background-color: #00e676;
     color: white;
+    white-space: nowrap; /* Prevent button text from wrapping */
 }
 .modal-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-0.125rem); /* 2px -> 0.125rem */
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3); /* 4px 8px -> 0.25rem 0.5rem */
 }
 #modal-cancel-button {
     background-color: #ff5252;
@@ -371,21 +378,20 @@ select:focus {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) translateY(20px);
+    transform: translate(-50%, -50%) translateY(1.25rem); /* 20px -> 1.25rem */
     font-size: 3em;
     font-weight: 700;
     color: #00e676;
-    text-shadow: 0 0 15px rgba(0, 230, 118, 0.8), 0 0 5px rgba(0, 230, 118, 1);
+    text-shadow: 0 0 0.9375rem rgba(0, 230, 118, 0.8), 0 0 0.3125rem rgba(0, 230, 118, 1); /* 15px 5px -> 0.9375rem 0.3125rem */
     opacity: 0;
     pointer-events: none;
-    transition: all 0.5s ease-out;
     z-index: 999;
 }
 
 @keyframes score-fade-in-up {
     0% {
         opacity: 0;
-        transform: translate(-50%, -50%) translateY(20px);
+        transform: translate(-50%, -50%) translateY(1.25rem); /* 20px -> 1.25rem */
     }
     30% {
         opacity: 1;
@@ -393,11 +399,11 @@ select:focus {
     }
     70% {
         opacity: 1;
-        transform: translate(-50%, -50%) translateY(-20px);
+        transform: translate(-50%, -50%) translateY(-1.25rem); /* 20px -> 1.25rem */
     }
     100% {
         opacity: 0;
-        transform: translate(-50%, -50%) translateY(-40px);
+        transform: translate(-50%, -50%) translateY(-2.5rem); /* 40px -> 2.5rem */
     }
 }
 
@@ -408,119 +414,170 @@ select:focus {
 
 /* Responsive Design */
 @media (max-width: 900px) {
-    /* DEBUG BORDERS */
-    body { border: 2px solid cyan !important; }
-    .game-container { border: 2px solid magenta !important; }
-    #main-grid { border: 2px solid yellow !important; }
-    #street-view { border: 2px solid orange !important; }
-    #map { border: 2px solid blue !important; }
-    /* END DEBUG BORDERS */
-
     .game-container {
         width: 98vw;
-        padding: 10px;
+        padding: 0.9375rem; /* 15px -> 0.9375rem */
+        margin-top: 0.75rem;
+        margin-bottom: 0.75rem;
     }
 
     header {
         flex-direction: column;
         align-items: center;
-        gap: 15px;
-        margin-bottom: 15px;
-        padding: 0 5px;
+        gap: 0.625rem; /* 10px -> 0.625rem */
+        margin-bottom: 0.9375rem; /* 15px -> 0.9375rem */
+        padding: 0 0.3125rem; /* 5px -> 0.3125rem */
     }
     h1 {
-        font-size: 1.8em;
+        font-size: 2em;
         text-align: center;
-        margin-bottom: 10px;
+        margin-bottom: 0.3125rem; /* 5px -> 0.3125rem */
+        margin-right: 0; /* Remove right margin when stacked */
     }
     #top-right-stats {
-        flex-direction: column;
+        flex-direction: row; /* Keep stats in a row if space allows */
+        justify-content: center; /* Center stats */
         align-items: center;
         width: 100%;
-        gap: 10px;
+        gap: 0.625rem; /* 10px -> 0.625rem */
     }
     #game-stats,
     #timer-section {
-        width: 95%;
+        width: auto; /* Adjust width based on content */
         align-items: center;
-        padding: 8px 12px;
+        padding: 0.5rem 0.75rem; /* 8px 12px -> 0.5rem 0.75rem */
         font-size: 1em;
     }
     #timer-bar-container {
-        width: 80%;
+        width: 7.5rem; /* 120px -> 7.5rem */
     }
 
     #main-grid {
-        /* THIS IS THE CRITICAL PART FOR STACKING */
         grid-template-columns: 1fr; /* Forces items into a single column */
-        display: grid; /* Ensure it's a grid */
-        gap: 10px; /* Reduced gap between stacked image and map */
-        width: 100%; /* Ensure it takes full width of its parent */
-        margin: 0 auto 15px auto; /* Center with reduced bottom margin */
+        gap: 0.9375rem; /* 15px -> 0.9375rem */
+        width: 100%;
+        margin: 0 auto 1.25rem auto; /* Adjusted margins */
     }
     #street-view {
-        height: 250px; /* Specific height for mobile Street View */
-        /* Explicitly set flex-basis to 100% if flexbox was used, but grid handles this. */
+        height: 18.75rem; /* 300px -> 18.75rem (increased height for better mobile view) */
     }
     #map {
-        height: 200px; /* Specific height for mobile Map, appears directly below Street View */
+        height: 15.625rem; /* 250px -> 15.625rem (increased height for better mobile view) */
     }
     #controls {
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 15px;
+        flex-direction: row; /* Keep controls in a row if space allows */
+        justify-content: center;
+        gap: 0.625rem; /* 10px -> 0.625rem */
+        margin-bottom: 0.9375rem; /* 15px -> 0.9375rem */
+    }
+    button,
+    select {
+        width: auto; /* Adjust button width based on content */
+        min-width: 7.5rem; /* 120px -> 7.5rem */
+        font-size: 1em;
+        padding: 0.625rem 1.25rem; /* 10px 20px -> 0.625rem 1.25rem */
+        border-radius: 0.5rem; /* 8px -> 0.5rem */
+    }
+    #info-panel {
+        font-size: 1.05em;
+        padding: 1.25rem; /* 20px -> 1.25rem */
+        border-radius: 0.625rem; /* 10px -> 0.625rem */
+        margin-bottom: 0.9375rem; /* 15px -> 0.9375rem */
+    }
+    #result {
+        font-size: 1.1em;
+        margin-top: 0.625rem; /* 10px -> 0.625rem */
+    }
+    #hint {
+        font-size: 0.9em;
+    }
+    .score-popup {
+        font-size: 2.5em;
+    }
+}
+
+@media (max-width: 500px) {
+    h1 {
+        font-size: 1.7em;
+        letter-spacing: 0.03125rem; /* 0.5px -> 0.03125rem */
+    }
+    #top-right-stats {
+        flex-direction: column; /* Stack stats on very small screens */
+        align-items: center;
+        gap: 0.5rem; /* 8px -> 0.5rem */
+    }
+    #game-stats,
+    #timer-section {
+        width: 90%;
+    }
+    #street-view {
+        height: 13.75rem; /* 220px -> 13.75rem (further reduced) */
+    }
+    #map {
+        height: 12.5rem; /* 200px -> 12.5rem (further reduced) */
+    }
+    #controls {
+        flex-direction: column; /* Stack controls on very small screens */
+        gap: 0.5rem; /* 8px -> 0.5rem */
     }
     button,
     select {
         width: 100%;
         min-width: unset;
-        font-size: 1em;
-        padding: 12px 20px;
-        border-radius: 8px;
+        font-size: 0.95em;
+        padding: 0.625rem; /* 10px -> 0.625rem */
+        border-radius: 0.375rem; /* 6px -> 0.375rem */
     }
     #info-panel {
         font-size: 1em;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 10px;
+        padding: 0.9375rem; /* 15px -> 0.9375rem */
+        border-radius: 0.5rem; /* 8px -> 0.5rem */
+        margin-bottom: 0.625rem; /* 10px -> 0.625rem */
     }
     #result {
-        font-size: 1.1em;
-        margin-top: 10px;
+        font-size: 1em;
+        margin-top: 0.5rem; /* 8px -> 0.5rem */
     }
     #hint {
-        font-size: 0.9em;
+        font-size: 0.85em;
+    }
+    .modal-content {
+        padding: 1.25rem; /* 20px -> 1.25rem */
+        width: 95%;
+        margin: 0.625rem auto; /* Further adjust modal margin */
+    }
+    #modal-message {
+        font-size: 1.1em;
     }
     .score-popup {
         font-size: 2em;
     }
 }
 
-@media (max-width: 500px) {
+/* Optional: Add another breakpoint for very large screens */
+@media (min-width: 1600px) {
+    .game-container {
+        max-width: 1500px; /* Or a larger value */
+        padding: 1.875rem; /* 30px -> 1.875rem */
+    }
     h1 {
-        font-size: 1.5em;
-        letter-spacing: 1px;
+        font-size: 3em;
     }
-    #street-view {
-        height: 200px; /* Even smaller for very small screens */
+    #main-grid {
+        gap: 2.5rem; /* 40px -> 2.5rem */
     }
+    #street-view,
     #map {
-        height: 180px; /* Even smaller for very small screens */
+        height: 37.5rem; /* 600px -> 37.5rem */
     }
-    .modal-content {
-        padding: 20px;
-        width: 90%;
+    button,
+    select {
+        padding: 1.25rem 2.1875rem; /* 20px 35px -> 1.25rem 2.1875rem */
+        font-size: 1.2em;
+        min-width: 11.25rem; /* 180px -> 11.25rem */
     }
-    #modal-message {
-        font-size: 1em;
-    }
-    #modal-buttons {
-        flex-direction: column;
-        gap: 8px;
-    }
-    .modal-button {
-        padding: 8px 15px;
-        font-size: 0.9em;
-        width: 100%;
+    #info-panel {
+        font-size: 1.2em;
+        padding: 1.875rem; /* 30px -> 1.875rem */
     }
 }
