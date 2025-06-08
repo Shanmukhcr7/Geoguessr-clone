@@ -56,7 +56,7 @@ const locations = {
 };
 
 const totalRounds = 5;
-const timePerRound = 30;
+const timePerRound = 60;
 
 let actualLocation = null;
 let actualCityName = null;
@@ -69,6 +69,7 @@ let currentRound = 1;
 let score = 0;
 let timerInterval = null;
 let timeLeft = timePerRound;
+let timerWarningPlayed = false; // New: to track if timer warning sound has played
 
 const streetViewDiv = document.getElementById("street-view");
 const guessButton = document.getElementById("guess-button");
@@ -93,13 +94,31 @@ const modalConfirmButton = document.getElementById('modal-confirm-button');
 const modalCancelButton = document.getElementById('modal-cancel-button');
 const closeButton = document.querySelector('.close-button');
 
+// --- Sound Elements ---
+const guessSound = new Audio('sounds/guess-sound.mp3'); // Path to your guess sound file
+const correctSound = new Audio('sounds/correct-sound.mp3'); // Path to your correct sound file
+const incorrectSound = new Audio('sounds/incorrect-sound.mp3'); // Path to your incorrect sound file
+const timerWarningSound = new Audio('sounds/timer-warning-sound.mp3'); // Path to your timer warning sound file
+const gameOverSound = new Audio('sounds/game-over-sound.mp3'); // Path to your game over sound file
+// --- End Sound Elements ---
+
+/**
+ * Plays a given audio element.
+ * @param {HTMLAudioElement} sound - The audio element to play.
+ */
+function playSound(sound) {
+    // Clone node to allow rapid re-playing of the same sound
+    const clonedSound = sound.cloneNode();
+    clonedSound.play().catch(e => console.warn("Audio playback failed:", e));
+}
+
 /**
  * Displays a custom confirmation modal.
  * @param {string} message - The message to display.
  * @param {function} onConfirm - Callback function if user confirms.
  * @param {function} onCancel - Callback function if user cancels (optional).
  */
-function showConfirmModal(message, onConfirm, onCancel = () => {}) {
+function showConfirmModal(message, onConfirm, onCancel = () => { }) {
     modalMessage.textContent = message;
     customModal.style.display = 'flex'; // Use flex to center
     modalConfirmButton.style.display = 'inline-block';
@@ -131,7 +150,7 @@ function showConfirmModal(message, onConfirm, onCancel = () => {}) {
  * @param {string} message - The message to display.
  * @param {function} onOk - Callback function when user clicks OK.
  */
-function showAlertModal(message, onOk = () => {}) {
+function showAlertModal(message, onOk = () => { }) {
     modalMessage.textContent = message;
     customModal.style.display = 'flex';
     modalCancelButton.style.display = 'none'; // Hide cancel button
@@ -191,7 +210,7 @@ function getRandomCoords(difficulty) {
  * Retries if no Street View data is available for the generated coordinates.
  * @param {number} retries - Number of remaining retries.
  * @returns {Promise<boolean>} - True if image loaded successfully, false otherwise.
- */
+*/
 function loadStreetViewImage(retries = 10) {
     // Show loading spinner and text
     streetViewDiv.innerHTML = `<p>Loading Street View...</p><div class="spinner"></div>`;
@@ -246,6 +265,7 @@ function initMap() {
             } else {
                 guessMarker = L.marker(e.latlng, { title: "Your Guess" }).addTo(map);
             }
+            playSound(guessSound); // Play sound when marker is placed/moved
         }
     });
 }
@@ -281,6 +301,7 @@ function startTimer() {
     timerP.textContent = `Time left: ${timeLeft}s`;
     timerBar.style.width = "100%";
     timerBar.style.backgroundColor = "#00e676"; // Green at start
+    timerWarningPlayed = false; // Reset warning flag for new round
 
     clearInterval(timerInterval); // Clear any existing timer
     timerInterval = setInterval(() => {
@@ -296,6 +317,11 @@ function startTimer() {
             timerBar.style.backgroundColor = "#ffa000"; // Amber
         } else {
             timerBar.style.backgroundColor = "#ff5252"; // Red
+            // Play timer warning sound when less than 10 seconds left and not already played
+            if (timeLeft <= 10 && !timerWarningPlayed) {
+                playSound(timerWarningSound);
+                timerWarningPlayed = true;
+            }
         }
 
         if (timeLeft <= 0) {
@@ -307,7 +333,7 @@ function startTimer() {
             if (!guessMarker) {
                 showAlertModal("Time's up! No guess was made for this round. You scored 0 points.", makeGuess);
             } else {
-                 makeGuess(); // Process the existing guess if any
+                makeGuess(); // Process the existing guess if any
             }
         }
     }, 1000);
@@ -374,14 +400,18 @@ function makeGuess() {
         resultP.textContent = `Your guess was ${distKm.toFixed(2)} km away. You scored ${roundScore} points.`;
         if (roundScore > (0.8 * 5000)) {
             resultP.className = "correct";
+            playSound(correctSound); // Play correct sound
         } else if (roundScore > (0.3 * 5000)) {
             resultP.className = "medium-correct"; // New class for medium scores
+            playSound(correctSound); // Play correct sound for medium also
         } else {
             resultP.className = "incorrect";
+            playSound(incorrectSound); // Play incorrect sound
         }
     } else {
         resultP.textContent = "No guess made. You scored 0 points.";
         resultP.className = "incorrect";
+        playSound(incorrectSound); // Play incorrect sound if no guess
     }
 
     hintP.textContent = `Actual location was near ${actualCityName}.`;
@@ -423,6 +453,7 @@ function makeGuess() {
 function nextRound() {
     currentRound++;
     if (currentRound > totalRounds) {
+        playSound(gameOverSound); // Play game over sound
         showAlertModal(`Game Over! Your total score is ${score}. Thanks for playing!`, resetGame);
         return;
     }
@@ -468,6 +499,7 @@ function resetGame() {
     hintP.textContent = "";
     guessButton.disabled = false;
     nextRoundButton.disabled = true;
+    timerWarningPlayed = false; // Reset warning flag
 
     clearInterval(timerInterval); // Stop any running timer
 
